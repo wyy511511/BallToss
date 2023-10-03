@@ -48,27 +48,34 @@ struct ARViewContainer: UIViewRepresentable {
     
     func makeUIView(context: Context) -> ARSCNView {
         let arView = ARSCNView(frame: .zero)
-            arView.delegate = context.coordinator
-            let tapRecognizer = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
-            arView.addGestureRecognizer(tapRecognizer)
+        arView.delegate = context.coordinator
+        let tapRecognizer = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        arView.addGestureRecognizer(tapRecognizer)
 
-            // Start AR session with world tracking
-            let configuration = ARWorldTrackingConfiguration()
-            arView.session.run(configuration)
+        // Start AR session with world tracking
+        let configuration = ARWorldTrackingConfiguration()
+        arView.session.run(configuration)
 
-            // Add a basic sphere as target
-            let sphere = SCNSphere(radius: 0.05) // 5 cm radius
-            let material = SCNMaterial()
-            material.diffuse.contents = UIColor.blue
-            sphere.materials = [material]
-            
-            let sphereNode = SCNNode(geometry: sphere)
-            sphereNode.position = SCNVector3(0, 0, -0.5) // Half meter in front of the camera
-            
-            arView.scene.rootNode.addChildNode(sphereNode)
+        // Add a basic cube as target
+        let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0)
+        let material = SCNMaterial()
+        material.diffuse.contents = UIColor.green
+        cube.materials = [material]
 
-            return arView
+        let cubeNode = SCNNode(geometry: cube)
+        cubeNode.position = SCNVector3(0, 0, -0.5) // Half meter in front of the camera
+
+        arView.scene.rootNode.addChildNode(cubeNode)
+
+        arView.scene.physicsWorld.contactDelegate = context.coordinator as! any SCNPhysicsContactDelegate
+           
+           // Configure cube for collision detection
+           cubeNode.physicsBody = SCNPhysicsBody(type: .static, shape: nil)
+           cubeNode.physicsBody?.categoryBitMask = 2
+
+           return arView
     }
+
     
     func updateUIView(_ uiView: ARSCNView, context: Context) {}
     
@@ -76,7 +83,7 @@ struct ARViewContainer: UIViewRepresentable {
         Coordinator(self)
     }
     
-    class Coordinator: NSObject, ARSCNViewDelegate {
+    class Coordinator: NSObject, ARSCNViewDelegate , SCNPhysicsContactDelegate {
         var parent: ARViewContainer
         
         init(_ parent: ARViewContainer) {
@@ -85,13 +92,31 @@ struct ARViewContainer: UIViewRepresentable {
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let arView = gesture.view as? ARSCNView else { return }
-            let location = gesture.location(in: arView)
-            let hitResults = arView.hitTest(location, options: nil)
+
+            // Create a ball to shoot
+            let ball = SCNSphere(radius: 0.02)
+            let material = SCNMaterial()
+            material.diffuse.contents = UIColor.red
+            ball.materials = [material]
+
+            let ballNode = SCNNode(geometry: ball)
+            ballNode.position = arView.pointOfView!.position
+
+            // Determine the orientation of the camera and apply a force to shoot the ball in that direction
+            let orientation = SCNVector3(-1 * arView.pointOfView!.transform.m31,
+                                         -1 * arView.pointOfView!.transform.m32,
+                                         -1 * arView.pointOfView!.transform.m33)
+            let force = SCNVector3(orientation.x * 2, orientation.y * 2, orientation.z * 2)
+            ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: nil)
+            ballNode.physicsBody?.applyForce(force, asImpulse: true)
+
+            arView.scene.rootNode.addChildNode(ballNode)
             
-            if let hitNode = hitResults.first?.node {
-                parent.onTargetHit(hitNode)
-            }
+            // Handle collision: You can enhance this to handle the collision between the ball and the cube.
+            ballNode.physicsBody?.categoryBitMask = 1
+            ballNode.physicsBody?.contactTestBitMask = 2
         }
+
         func session(_ session: ARSession, didFailWithError error: Error) {
                 // Present an error to the user
                 print("Session failed: \(error)")
@@ -107,7 +132,24 @@ struct ARViewContainer: UIViewRepresentable {
                 print("Session interruption ended")
             }
         
-        // Implement other ARSCNViewDelegate methods if needed
+        
+        func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
+                let nodeA = contact.nodeA
+                let nodeB = contact.nodeB
+                
+                if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
+                    // Handle collision between ball (nodeA) and cube (nodeB)
+                    DispatchQueue.main.async {
+                        self.parent.onTargetHit(nodeB)
+                    }
+                } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
+                    // Handle collision between cube (nodeA) and ball (nodeB)
+                    DispatchQueue.main.async {
+                        self.parent.onTargetHit(nodeA)
+                    }
+                }
+            }
+
     }
 }
 
