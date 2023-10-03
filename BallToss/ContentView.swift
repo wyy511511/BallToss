@@ -57,22 +57,25 @@ struct ARViewContainer: UIViewRepresentable {
         let configuration = ARWorldTrackingConfiguration()
         arView.session.run(configuration)
 
-        // Add a basic cube as target
-        let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0)
-        let material = SCNMaterial()
-        material.diffuse.contents = UIColor.green
-        cube.materials = [material]
+        guard let modelURL = Bundle.main.url(forResource: "tv_retro", withExtension: "usdz") else {
+                fatalError("Failed to find model file.")
+            }
+            
+            guard let object = try? SCNReferenceNode(url: modelURL) else {
+                fatalError("Failed to load model.")
+            }
+            object.load()
+            
+            object.position = SCNVector3(0, 0, -0.5)
+            arView.scene.rootNode.addChildNode(object)
+            
 
-        let cubeNode = SCNNode(geometry: cube)
-        cubeNode.position = SCNVector3(0, 0, -0.5) // Half meter in front of the camera
-
-        arView.scene.rootNode.addChildNode(cubeNode)
-
-        arView.scene.physicsWorld.contactDelegate = context.coordinator as! any SCNPhysicsContactDelegate
+        arView.scene.physicsWorld.contactDelegate = context.coordinator as! SCNPhysicsContactDelegate
            
-           // Configure cube for collision detection
-           cubeNode.physicsBody = SCNPhysicsBody(type: .static, shape: nil)
-           cubeNode.physicsBody?.categoryBitMask = 2
+        // Configure the model for collision detection
+        object.physicsBody = SCNPhysicsBody(type: .static, shape: nil)
+        object.physicsBody?.categoryBitMask = 2
+
 
            return arView
     }
@@ -146,21 +149,22 @@ struct ARViewContainer: UIViewRepresentable {
         
         
         func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
-                let nodeA = contact.nodeA
-                let nodeB = contact.nodeB
-                
-                if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
-                    // Handle collision between ball (nodeA) and cube (nodeB)
-                    DispatchQueue.main.async {
-                        self.parent.onTargetHit(nodeB)
-                    }
-                } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
-                    // Handle collision between cube (nodeA) and ball (nodeB)
-                    DispatchQueue.main.async {
-                        self.parent.onTargetHit(nodeA)
-                    }
-                }
+            let nodeA = contact.nodeA
+            let nodeB = contact.nodeB
+            
+            if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
+                // Handle collision between ball (nodeA) and tv model (nodeB)
+                zoomOut(nodeB)
+            } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
+                // Handle collision between tv model (nodeA) and ball (nodeB)
+                zoomOut(nodeA)
             }
+        }
+
+        func zoomOut(_ node: SCNNode) {
+            let action = SCNAction.scale(by: 0.5, duration: 1)  // Scale down by 50% in 1 second
+            node.runAction(action)
+        }
 
     }
 }
