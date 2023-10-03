@@ -56,6 +56,9 @@ struct ARViewContainer: UIViewRepresentable {
         // Start AR session with world tracking
         let configuration = ARWorldTrackingConfiguration()
         arView.session.run(configuration)
+        
+
+
 
         guard let modelURL = Bundle.main.url(forResource: "tv_retro", withExtension: "usdz") else {
                 fatalError("Failed to find model file.")
@@ -65,16 +68,30 @@ struct ARViewContainer: UIViewRepresentable {
                 fatalError("Failed to load model.")
             }
             object.load()
+            object.scale = SCNVector3(0.5, 0.5, 0.5)  // Adjust as needed
+
             
             object.position = SCNVector3(0, 0, -0.5)
+        
             arView.scene.rootNode.addChildNode(object)
             
 
         arView.scene.physicsWorld.contactDelegate = context.coordinator as! SCNPhysicsContactDelegate
-           
+        
+
         // Configure the model for collision detection
         object.physicsBody = SCNPhysicsBody(type: .static, shape: nil)
         object.physicsBody?.categoryBitMask = 2
+        
+        
+        let collisionBox = SCNBox(width: 0.2, height: 0.2, length: 0.2, chamferRadius: 0)
+        let collisionNode = SCNNode(geometry: collisionBox)
+        collisionNode.opacity = 0.0  // Make it invisible
+        collisionNode.position = object.position
+
+        collisionNode.physicsBody = SCNPhysicsBody(type: .static, shape: nil)
+        collisionNode.physicsBody?.categoryBitMask = 2
+        arView.scene.rootNode.addChildNode(collisionNode)
 
 
            return arView
@@ -154,12 +171,23 @@ struct ARViewContainer: UIViewRepresentable {
             
             if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
                 // Handle collision between ball (nodeA) and tv model (nodeB)
-                shake(nodeB)
+                if let modelNode = nodeB.childNode(withName: "tv_retro", recursively: true) {
+                    shake(modelNode)  // Shake the actual model node
+                    DispatchQueue.main.async {
+                                        self.parent.onTargetHit(modelNode)
+                                    }
+                }
             } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
                 // Handle collision between tv model (nodeA) and ball (nodeB)
-                shake(nodeA)
+                if let modelNode = nodeA.childNode(withName: "tv_retro", recursively: true) {
+                    shake(modelNode)  // Shake the actual model node
+                    DispatchQueue.main.async {
+                                        self.parent.onTargetHit(modelNode)
+                                    }
+                }
             }
         }
+
 
         func zoomOut(_ node: SCNNode) {
             let action = SCNAction.scale(by: 0.5, duration: 1)  // Scale down by 50% in 1 second
