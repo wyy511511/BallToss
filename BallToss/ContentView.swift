@@ -154,10 +154,10 @@ struct ARViewContainer: UIViewRepresentable {
             
             if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
                 // Handle collision between ball (nodeA) and tv model (nodeB)
-                zoomOut(nodeB)
+                shake(nodeB)
             } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
                 // Handle collision between tv model (nodeA) and ball (nodeB)
-                zoomOut(nodeA)
+                shake(nodeA)
             }
         }
 
@@ -165,6 +165,15 @@ struct ARViewContainer: UIViewRepresentable {
             let action = SCNAction.scale(by: 0.5, duration: 1)  // Scale down by 50% in 1 second
             node.runAction(action)
         }
+        
+        func shake(_ node: SCNNode) {
+            let leftShake = SCNAction.rotateBy(x: 0, y: 0, z: CGFloat(-0.05), duration: 0.1)
+            let rightShake = SCNAction.rotateBy(x: 0, y: 0, z: CGFloat(0.05), duration: 0.1)
+            let shakeAction = SCNAction.sequence([leftShake, rightShake])
+            let shakeRepeat = SCNAction.repeat(shakeAction, count: 3)  // Shake three times
+            node.runAction(shakeRepeat)
+        }
+
 
     }
 }
