@@ -15,7 +15,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            ARViewContainer { hitNode in
+            ARViewContainer(shotsRemaining: $shotsRemaining) { hitNode in
                 if shotsRemaining > 0 {
                     // Handle node hit, e.g., change color
                     hitNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
@@ -39,12 +39,13 @@ struct ContentView: View {
 
 
 struct ARViewContainer: UIViewRepresentable {
+    @Binding var shotsRemaining: Int
+    var onTargetHit: ((SCNNode) -> Void)
 
     
     
     typealias UIViewType = ARSCNView
-    
-    var onTargetHit: ((SCNNode) -> Void)
+
     
     func makeUIView(context: Context) -> ARSCNView {
         let arView = ARSCNView(frame: .zero)
@@ -92,6 +93,13 @@ struct ARViewContainer: UIViewRepresentable {
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let arView = gesture.view as? ARSCNView else { return }
+            
+
+            
+            if self.parent.shotsRemaining < 1 {
+                return
+            }
+            
 
             // Create a ball to shoot
             let ball = SCNSphere(radius: 0.02)
@@ -115,6 +123,10 @@ struct ARViewContainer: UIViewRepresentable {
             // Handle collision: You can enhance this to handle the collision between the ball and the cube.
             ballNode.physicsBody?.categoryBitMask = 1
             ballNode.physicsBody?.contactTestBitMask = 2
+            
+            DispatchQueue.main.async {
+                self.parent.shotsRemaining -= 1
+            }
         }
 
         func session(_ session: ARSession, didFailWithError error: Error) {
