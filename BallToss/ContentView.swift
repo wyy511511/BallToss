@@ -20,7 +20,7 @@ struct ContentView: View {
                     // Handle node hit, e.g., change color
                     hitNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
                     score += 1
-                    shotsRemaining -= 1
+//                    shotsRemaining -= 1
                 }
             }
 
@@ -60,7 +60,7 @@ struct ARViewContainer: UIViewRepresentable {
 
 
 
-        guard let modelURL = Bundle.main.url(forResource: "tv_retro", withExtension: "usdz") else {
+        guard let modelURL = Bundle.main.url(forResource: "chair_swan", withExtension: "usdz") else {
                 fatalError("Failed to find model file.")
             }
             
@@ -106,6 +106,8 @@ struct ARViewContainer: UIViewRepresentable {
     
     class Coordinator: NSObject, ARSCNViewDelegate , SCNPhysicsContactDelegate {
         var parent: ARViewContainer
+        var hasUpdatedScore = false
+
         
         init(_ parent: ARViewContainer) {
             self.parent = parent
@@ -171,21 +173,38 @@ struct ARViewContainer: UIViewRepresentable {
             
             if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
                 // Handle collision between ball (nodeA) and tv model (nodeB)
-                if let modelNode = nodeB.childNode(withName: "tv_retro", recursively: true) {
+                if let modelNode = nodeB.childNode(withName: "chair_swan", recursively: true) {
                     shake(modelNode)  // Shake the actual model node
-                    DispatchQueue.main.async {
-                                        self.parent.onTargetHit(modelNode)
-                                    }
+
+                    if !hasUpdatedScore {
+                        self.parent.onTargetHit(modelNode)
+                        hasUpdatedScore = true
+
+                        // Reset after a small delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.hasUpdatedScore = false
+                        }
+                    }
+
                 }
             } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
                 // Handle collision between tv model (nodeA) and ball (nodeB)
-                if let modelNode = nodeA.childNode(withName: "tv_retro", recursively: true) {
+                if let modelNode = nodeA.childNode(withName: "chair_swan", recursively: true) {
                     shake(modelNode)  // Shake the actual model node
-                    DispatchQueue.main.async {
-                                        self.parent.onTargetHit(modelNode)
-                                    }
+                    if !hasUpdatedScore {
+                        self.parent.onTargetHit(modelNode)
+                        hasUpdatedScore = true
+
+                        // Reset after a small delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.hasUpdatedScore = false
+                        }
+                    }
+
                 }
             }
+            
+
         }
 
 

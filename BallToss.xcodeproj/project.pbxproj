@@ -12,6 +12,7 @@
 		5466D97F2ACBA86300586796 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5466D97E2ACBA86300586796 /* Assets.xcassets */; };
 		5466D9822ACBA86300586796 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5466D9812ACBA86300586796 /* Preview Assets.xcassets */; };
 		5466D9892ACBB7FD00586796 /* tv_retro.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 5466D9882ACBB7FD00586796 /* tv_retro.usdz */; };
+		5466D98B2ACBBC9600586796 /* chair_swan.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 5466D98A2ACBBC9600586796 /* chair_swan.usdz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		5466D97E2ACBA86300586796 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5466D9812ACBA86300586796 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5466D9882ACBB7FD00586796 /* tv_retro.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = tv_retro.usdz; sourceTree = "<group>"; };
+		5466D98A2ACBBC9600586796 /* chair_swan.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = chair_swan.usdz; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 				5466D97A2ACBA86200586796 /* AppDelegate.swift */,
 				5466D97C2ACBA86200586796 /* ContentView.swift */,
 				5466D9882ACBB7FD00586796 /* tv_retro.usdz */,
+				5466D98A2ACBBC9600586796 /* chair_swan.usdz */,
 				5466D97E2ACBA86300586796 /* Assets.xcassets */,
 				5466D9802ACBA86300586796 /* Preview Content */,
 			);
@@ -130,6 +133,7 @@
 			files = (
 				5466D9892ACBB7FD00586796 /* tv_retro.usdz in Resources */,
 				5466D9822ACBA86300586796 /* Preview Assets.xcassets in Resources */,
+				5466D98B2ACBBC9600586796 /* chair_swan.usdz in Resources */,
 				5466D97F2ACBA86300586796 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
