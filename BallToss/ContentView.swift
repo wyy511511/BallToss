@@ -17,8 +17,6 @@ struct ContentView: View {
         VStack {
             ARViewContainer(shotsRemaining: $shotsRemaining) { hitNode in
                 if shotsRemaining > 0 {
-                    // Handle node hit, e.g., change color
-                    hitNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
                     score += 1
 //                    shotsRemaining -= 1
                 }
@@ -53,7 +51,7 @@ struct ARViewContainer: UIViewRepresentable {
         let tapRecognizer = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         arView.addGestureRecognizer(tapRecognizer)
 
-        // Start AR session with world tracking
+
         let configuration = ARWorldTrackingConfiguration()
         arView.session.run(configuration)
         
@@ -68,7 +66,7 @@ struct ARViewContainer: UIViewRepresentable {
                 fatalError("Failed to load model.")
             }
             object.load()
-            object.scale = SCNVector3(0.5, 0.5, 0.5)  // Adjust as needed
+            object.scale = SCNVector3(0.2, 0.2, 0.2)  // Adjust as needed
 
             
             object.position = SCNVector3(0, 0, -0.5)
@@ -123,7 +121,7 @@ struct ARViewContainer: UIViewRepresentable {
             }
             
 
-            // Create a ball to shoot
+
             let ball = SCNSphere(radius: 0.02)
             let material = SCNMaterial()
             material.diffuse.contents = UIColor.red
@@ -142,7 +140,6 @@ struct ARViewContainer: UIViewRepresentable {
 
             arView.scene.rootNode.addChildNode(ballNode)
             
-            // Handle collision: You can enhance this to handle the collision between the ball and the cube.
             ballNode.physicsBody?.categoryBitMask = 1
             ballNode.physicsBody?.contactTestBitMask = 2
             
@@ -172,15 +169,13 @@ struct ARViewContainer: UIViewRepresentable {
             let nodeB = contact.nodeB
             
             if nodeA.physicsBody?.categoryBitMask == 1 && nodeB.physicsBody?.categoryBitMask == 2 {
-                // Handle collision between ball (nodeA) and tv model (nodeB)
+
                 if let modelNode = nodeB.childNode(withName: "chair_swan", recursively: true) {
-                    shake(modelNode)  // Shake the actual model node
+                    shake(modelNode)
 
                     if !hasUpdatedScore {
                         self.parent.onTargetHit(modelNode)
                         hasUpdatedScore = true
-
-                        // Reset after a small delay
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             self.hasUpdatedScore = false
                         }
@@ -188,14 +183,13 @@ struct ARViewContainer: UIViewRepresentable {
 
                 }
             } else if nodeA.physicsBody?.categoryBitMask == 2 && nodeB.physicsBody?.categoryBitMask == 1 {
-                // Handle collision between tv model (nodeA) and ball (nodeB)
                 if let modelNode = nodeA.childNode(withName: "chair_swan", recursively: true) {
-                    shake(modelNode)  // Shake the actual model node
+                    shake(modelNode)
                     if !hasUpdatedScore {
                         self.parent.onTargetHit(modelNode)
                         hasUpdatedScore = true
 
-                        // Reset after a small delay
+
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             self.hasUpdatedScore = false
                         }
@@ -226,31 +220,6 @@ struct ARViewContainer: UIViewRepresentable {
 }
 
 
-//struct ARViewContainer: UIViewRepresentable {
-//    
-//    func makeUIView(context: Context) -> ARView {
-//        
-//        let arView = ARView(frame: .zero)
-//
-//        // Create a cube model
-//        let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-//        let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-//        let model = ModelEntity(mesh: mesh, materials: [material])
-//
-//        // Create horizontal plane anchor for the content
-//        let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-//        anchor.children.append(model)
-//
-//        // Add the horizontal plane anchor to the scene
-//        arView.scene.anchors.append(anchor)
-//
-//        return arView
-//        
-//    }
-//    
-//    func updateUIView(_ uiView: ARView, context: Context) {}
-//    
-//}
 
 #Preview {
     ContentView()
